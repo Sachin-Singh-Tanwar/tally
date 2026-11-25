@@ -268,5 +268,32 @@
     "status_code": 200,
     "error": null,
     "staged": false
+  },
+  {
+    "ts": "2026-11-25T17:10:33Z",
+    "target": "portfolio",
+    "ok": false,
+    "latency_ms": 140,
+    "status_code": 200,
+    "error": "STAGED DEMO FAILURE",
+    "staged": true
+  },
+  {
+    "ts": "2026-11-25T17:10:33Z",
+    "target": "gh_api",
+    "ok": true,
+    "latency_ms": 16,
+    "status_code": 200,
+    "error": null,
+    "staged": false
+  },
+  {
+    "ts": "2026-11-25T17:10:33Z",
+    "target": "apify_api",
+    "ok": true,
+    "latency_ms": 270,
+    "status_code": 200,
+    "error": null,
+    "staged": false
   }
 ]
