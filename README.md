@@ -1,7 +1,6 @@
 # Tally
 
-A public record of three endpoint checks. The page says what the data says, including when a
-scheduled run is late.
+Tally answers one question: did the scheduled job actually run? It records real runs, derives uptime and incidents from that record, and shows the proof publicly. If a check has not succeeded on schedule, the page says so — it does not hide it.
 
 - Repo: https://github.com/Sachin-Singh-Tanwar/tally
 - Live: https://sachin-singh-tanwar.github.io/tally/
