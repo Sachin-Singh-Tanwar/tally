@@ -133,5 +133,32 @@
     "status_code": 200,
     "error": null,
     "staged": false
+  },
+  {
+    "ts": "2026-11-25T17:06:13Z",
+    "target": "portfolio",
+    "ok": true,
+    "latency_ms": 50,
+    "status_code": 200,
+    "error": null,
+    "staged": false
+  },
+  {
+    "ts": "2026-11-25T17:06:13Z",
+    "target": "gh_api",
+    "ok": true,
+    "latency_ms": 18,
+    "status_code": 200,
+    "error": null,
+    "staged": false
+  },
+  {
+    "ts": "2026-11-25T17:06:13Z",
+    "target": "apify_api",
+    "ok": true,
+    "latency_ms": 39,
+    "status_code": 200,
+    "error": null,
+    "staged": false
   }
 ]
