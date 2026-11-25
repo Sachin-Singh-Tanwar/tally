@@ -1,0 +1,65 @@
+name: Tally checks
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Stage a demo failure for the next 4 runs"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tally-checks
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Checkout data branch
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install worker dependency
+        run: python -m pip install --quiet requests
+
+      - name: Probe public endpoints
+        working-directory: app
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SIMULATE_FAILURE: ${{ inputs.simulate_failure }}
+        run: |
+          FLAGS="--data-dir ../data --event workflow_dispatch --simulate ${SIMULATE_FAILURE:-false}"
+          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            FLAGS="--data-dir ../data"
+          fi
+          python worker/run_checks.py $FLAGS
+
+      - name: Commit run records to data branch
+        working-directory: data
+        run: |
+          git config user.name "tally-bot"
+          git config user.email "tally-bot@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Record checks $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:data
+          fi
