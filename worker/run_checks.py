@@ -118,8 +118,10 @@ def main() -> None:
             )
             staged_target = None
         elif args.simulate == "false":
-            save_state(data_dir, None)
-            staged_target = None
+            # A normal dispatch does not cancel a staged sequence. GitHub passes
+            # boolean false for every default dispatch, so cancelling here would
+            # make the "next 4 runs" impossible to demonstrate with dispatches.
+            pass
 
     records: list[dict[str, Any]] = []
     for name, url in TARGETS.items():

@@ -50,10 +50,13 @@ is computed from records in `src/lib/status.ts`; nothing is hardcoded.
 
 Trigger a workflow dispatch on `Tally checks` with `simulate_failure=true`. That dispatch run
 is a normal check; the **next four runs** record `ok=false`, `staged=true` and
-`error="STAGED DEMO FAILURE"` for the `portfolio` target. Let the cron keep running to see the
-state move through `DEGRADED` and `DOWN` and an incident open. Dispatch again with
-`simulate_failure=false` to clear the flag early; otherwise the counter clears itself after
-four runs and the next run recovers, closing the incident with a measured MTTR.
+`error="STAGED DEMO FAILURE"` for the `portfolio` target. Any of the next four runs counts,
+whether it comes from the cron or from a normal dispatch; the counter clears itself after the
+fourth. Let the cron space those runs out to see the state move through `DEGRADED` and `DOWN`
+and an incident open. Because GitHub passes boolean `false` for every default dispatch, a normal
+dispatch no longer cancels a staged sequence; to cancel early, delete `runs/.simulate.json` from
+the `data` branch. The next run after the counter clears recovers, closing the incident with a
+measured MTTR.
 
 **A staged run is never presented as a real outage.** Every record with `staged=true` renders a
 `STAGED DEMO` badge on the status and incident screens. The same sentence appears on the
