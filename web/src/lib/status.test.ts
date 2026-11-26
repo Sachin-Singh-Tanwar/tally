@@ -32,8 +32,8 @@ describe('status from recorded runs', () => {
 
     const observed = [
       targetState(runs, 'portfolio', T0 + 10 * MINUTE),
-      targetState(runs, 'portfolio', T0 + 50 * MINUTE),
-      targetState(runs, 'portfolio', T0 + 95 * MINUTE),
+      targetState(runs, 'portfolio', T0 + 70 * MINUTE),
+      targetState(runs, 'portfolio', T0 + 125 * MINUTE),
     ]
 
     expect(observed).toEqual(['OPERATIONAL', 'DEGRADED', 'DOWN'])

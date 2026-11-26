@@ -33,11 +33,20 @@ Targets: `portfolio` (https://sachin-singh-tanwar.github.io/), `gh_api`
 Expected interval: 30 minutes. For each target, `age = now - last_ok`, where `last_ok` is the
 newest record with `ok=true`.
 
+**Staleness threshold: 2 hours** (four scheduled 30-minute slots, or roughly three missed slot
+boundaries). This replaced the old 90-minute threshold. GitHub Actions scheduled runs are
+best-effort: under load, cron can be delayed or skipped. A late run is shown as late; it is not
+evidence that the monitored endpoint is down. On 2026-11-26 the last real run landed at
+`03:09:50Z`; under the old threshold the demo was already `DOWN` before the scheduler had a fair
+chance to run. The wider window keeps that honest as `DEGRADED`. A recorded `ok=false` still
+opens an incident immediately and keeps its `STAGED DEMO` badge when staged, so the tolerance
+only affects missing records, not real failures.
+
 | State | Rule |
 | --- | --- |
-| `OPERATIONAL` | `age <= 1.5 * interval` (45 min) |
-| `DEGRADED` | `1.5 * interval < age <= 3 * interval` (45–90 min) |
-| `DOWN` | `age > 3 * interval` (90 min) |
+| `OPERATIONAL` | `age <= 2 * interval` (60 min) |
+| `DEGRADED` | `2 * interval < age <= 4 * interval` (60-120 min / 2h) |
+| `DOWN` | `age > 4 * interval` (older than 2h) |
 | `NEVER_RAN` | no `ok=true` record |
 
 An incident is a consecutive streak of `ok=false` records. Its start is the first failure, its
@@ -73,5 +82,7 @@ npm run preview
 
 ## Honesty note
 
-Tally runs on GitHub Actions. GitHub can delay scheduled runs; a late run is shown as late, not
-as a success.
+Tally runs on GitHub Actions. GitHub can delay or skip scheduled runs; a late run is shown as
+late, not as a success. The 2-hour staleness threshold absorbs best-effort scheduler delay
+without hiding real outages: a recorded failure still goes straight into the incident streak
+and still renders its measured MTTR.

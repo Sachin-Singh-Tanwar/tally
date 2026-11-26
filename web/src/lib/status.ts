@@ -1,6 +1,8 @@
 export const INTERVAL_MS = 30 * 60 * 1000
-export const DEGRADED_AFTER_MS = 1.5 * INTERVAL_MS
-export const DOWN_AFTER_MS = 3 * INTERVAL_MS
+// GitHub Actions cron is best-effort: a late or dropped scheduled run is not an outage.
+// Allow four 30-minute slots (2h) before DOWN; ~3 missed slot boundaries is the same window.
+export const DEGRADED_AFTER_MS = 2 * INTERVAL_MS
+export const DOWN_AFTER_MS = 4 * INTERVAL_MS
 export const STAGED_ERROR = 'STAGED DEMO FAILURE'
 
 export const TARGETS = ['portfolio', 'gh_api', 'apify_api'] as const
