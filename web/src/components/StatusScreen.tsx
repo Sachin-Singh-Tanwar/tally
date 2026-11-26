@@ -6,7 +6,6 @@ import {
   buildIncidents,
   lastOkAt,
   lastRuns,
-  measuredFrom,
   overallState,
   TARGETS,
   targetState,
@@ -26,13 +25,20 @@ const URLS: Record<string, string> = {
   apify_api: 'api.apify.com/v2/store',
 }
 
-export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) {
+export function StatusScreen({
+  runs,
+  now,
+  baseline,
+}: {
+  runs: RunRecord[]
+  now: number
+  baseline: number | null
+}) {
   const overall = overallState(runs, now)
   const latest = runs[runs.length - 1] ?? null
   const first = runs[0] ?? null
   const incidents = buildIncidents(runs, now)
   const openIncidents = incidents.filter((incident) => !incident.resolved)
-  const baseline = measuredFrom(runs)
   const measuredRuns =
     baseline === null ? [] : runs.filter((record) => Date.parse(record.ts) >= baseline)
 
@@ -90,8 +96,9 @@ export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) 
             </h2>
           </div>
           <p className="section-note">
-            ok records divided by all records inside each window since measured_since, counted
-            from the data branch.
+            {baseline === null
+              ? 'The first externally triggered cycle starts this window.'
+              : `ok records divided by all records inside each window since ${absoluteTime(baseline)}, counted from the data branch.`}
           </p>
         </div>
         <div className="panel uptime-scroll">

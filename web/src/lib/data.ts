@@ -1,7 +1,9 @@
-import type { RunRecord } from './status'
+import { measuredFrom, type RunRecord } from './status'
 
 const RAW_BASE =
   'https://raw.githubusercontent.com/Sachin-Singh-Tanwar/tally/data/runs/'
+const META_URL =
+  'https://raw.githubusercontent.com/Sachin-Singh-Tanwar/tally/data/meta.json'
 
 // The data branch starts at 2026-11. index.json is authoritative for which month
 // files exist; the floor only guards against an older manifest.
@@ -33,6 +35,22 @@ async function fetchMonth(key: string): Promise<RunRecord[]> {
     return Array.isArray(payload) ? (payload as RunRecord[]) : []
   } catch {
     return []
+  }
+}
+
+export async function loadBaseline(runs: RunRecord[]): Promise<number | null> {
+  const derived = measuredFrom(runs)
+  if (derived === null) return null
+  try {
+    const response = await fetch(`${META_URL}?v=${Date.now()}`, { cache: 'no-store' })
+    if (!response.ok) return derived
+    const payload: unknown = await response.json()
+    const since = (payload as { measured_since?: unknown }).measured_since
+    if (typeof since !== 'string') return derived
+    const at = Date.parse(since)
+    return Number.isNaN(at) ? derived : at
+  } catch {
+    return derived
   }
 }
 

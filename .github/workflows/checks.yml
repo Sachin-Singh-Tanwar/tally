@@ -10,7 +10,7 @@ on:
           - schedule
           - manual
         required: false
-        default: schedule
+        default: manual
       simulate_failure:
         description: "Stage a demo failure for the next 4 runs (manual only)"
         type: boolean

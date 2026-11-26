@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { IncidentsScreen } from './components/IncidentsScreen'
 import { MethodScreen } from './components/MethodScreen'
 import { StatusScreen } from './components/StatusScreen'
-import { loadRuns } from './lib/data'
+import { loadBaseline, loadRuns } from './lib/data'
 import type { RunRecord } from './lib/status'
 
 type Route = 'status' | 'incidents' | 'method'
@@ -22,6 +22,7 @@ function readRoute(): Route {
 export default function App() {
   const [route, setRoute] = useState<Route>(readRoute)
   const [runs, setRuns] = useState<RunRecord[]>([])
+  const [baseline, setBaseline] = useState<number | null>(null)
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [message, setMessage] = useState('')
   const [now, setNow] = useState(() => Date.now())
@@ -38,8 +39,10 @@ export default function App() {
     const refresh = async () => {
       try {
         const next = await loadRuns()
+        const nextBaseline = await loadBaseline(next)
         if (!active) return
         setRuns(next)
+        setBaseline(nextBaseline)
         setNow(Date.now())
         setLoadState('ready')
         setMessage('')
@@ -91,11 +94,13 @@ export default function App() {
             Run history could not be read. {message}
           </div>
         )}
-        {loadState === 'ready' && route === 'status' && <StatusScreen runs={runs} now={now} />}
+        {loadState === 'ready' && route === 'status' && (
+          <StatusScreen runs={runs} now={now} baseline={baseline} />
+        )}
         {loadState === 'ready' && route === 'incidents' && (
           <IncidentsScreen runs={runs} now={now} />
         )}
-        {loadState === 'ready' && route === 'method' && <MethodScreen />}
+        {loadState === 'ready' && route === 'method' && <MethodScreen baseline={baseline} />}
       </main>
 
       <footer className="site-footer">

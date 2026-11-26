@@ -1,10 +1,12 @@
+import { absoluteTime } from '../lib/format'
+
 const TARGETS = [
   { name: 'portfolio', url: 'https://sachin-singh-tanwar.github.io/' },
   { name: 'gh_api', url: 'https://api.github.com/rate_limit' },
   { name: 'apify_api', url: 'https://api.apify.com/v2/store?limit=1' },
 ]
 
-export function MethodScreen() {
+export function MethodScreen({ baseline }: { baseline: number | null }) {
   return (
     <>
       <section className="hero">
@@ -99,9 +101,10 @@ export function MethodScreen() {
           after the streak minus that start; if there is no recovery yet, the incident is
           ongoing. MTTR is the duration of a resolved incident. Uptime is{' '}
           <code>ok_count / total_count</code> for a window of 24h, 7d, or 30d, excluding staged
-          demo records. All three come from real records. Before <code>measured_since</code> the
-          audit ran on GitHub's built-in cron, which dropped runs, and those cycles are excluded
-          from this window.
+          demo records. All three come from real records.{' '}
+          {baseline === null
+            ? "Before the external trigger was enabled, the audit ran on GitHub's built-in cron, which dropped runs, and those cycles are excluded from this window."
+            : `Before ${absoluteTime(baseline)} the audit ran on GitHub's built-in cron, which dropped runs, and those cycles are excluded from this window.`}
         </p>
       </section>
 
