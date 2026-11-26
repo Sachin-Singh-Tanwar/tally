@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,9 @@ STAGED_ERROR = "STAGED DEMO FAILURE"
 STAGED_TARGET = "portfolio"
 STAGED_RUNS = 4
 STATE_FILE = ".simulate.json"
+INDEX_FILE = "index.json"
+META_FILE = "meta.json"
+MONTH_FILE = re.compile(r"^\d{4}-\d{2}\.json$")
 
 
 def utc_now() -> datetime:
@@ -59,6 +63,45 @@ def save_state(data_dir: Path, state: dict[str, Any] | None) -> None:
         path.unlink(missing_ok=True)
         return
     path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+
+
+def write_index(data_dir: Path) -> list[str]:
+    """List the month files that actually exist so the UI never guesses a month."""
+    runs_dir = data_dir / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    months = sorted(
+        path.name.removesuffix(".json")
+        for path in runs_dir.iterdir()
+        if path.is_file() and MONTH_FILE.fullmatch(path.name)
+    )
+    (runs_dir / INDEX_FILE).write_text(
+        json.dumps({"months": months}, indent=2) + "\n", encoding="utf-8"
+    )
+    return months
+
+
+def set_baseline(data_dir: Path, stamp: str) -> None:
+    """Pin the measurement window to the first externally scheduled cycle."""
+    path = data_dir / META_FILE
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict) and existing.get("measured_since"):
+                return
+        except ValueError:
+            pass
+    path.write_text(
+        json.dumps(
+            {
+                "measured_since": stamp,
+                "trigger": "external",
+                "interval_minutes": 30,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def probe(url: str) -> dict[str, Any]:
@@ -139,6 +182,7 @@ def main() -> None:
                 "status_code": result["status_code"],
                 "error": result["error"],
                 "staged": staged,
+                "event": args.event or "workflow_dispatch",
             }
         )
 
@@ -162,6 +206,9 @@ def main() -> None:
             history = []
     history.extend(records)
     monthly.write_text(json.dumps(history, indent=2) + "\n", encoding="utf-8")
+    months = write_index(data_dir)
+    if args.event == "schedule":
+        set_baseline(data_dir, stamp)
 
     for record in records:
         flag = " STAGED" if record["staged"] else ""
@@ -170,7 +217,7 @@ def main() -> None:
             f"{'ok  ' if record['ok'] else 'FAIL'} "
             f"{record['latency_ms']:>5}ms {record['error'] or ''}{flag}"
         )
-    print(f"appended {len(records)} records to {monthly}")
+    print(f"appended {len(records)} records to {monthly} · index months: {', '.join(months)}")
 
 
 if __name__ == "__main__":

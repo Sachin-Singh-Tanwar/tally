@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildIncidents,
   lastOkAt,
+  measuredFrom,
   overallState,
   STAGED_ERROR,
   targetState,
@@ -85,5 +86,12 @@ describe('status from recorded runs', () => {
     expect(uptimePercent(runs, 'portfolio', HOUR, now)).toBe(50)
     expect(uptimePercent(runs, null, HOUR, now)).toBe(75)
     expect(uptimePercent([], null, HOUR, now)).toBeNull()
+  })
+
+  it('pins the measured window to the first externally scheduled cycle', () => {
+    const runs = [record(0, true), { ...record(30, true), event: 'schedule' }]
+
+    expect(measuredFrom(runs)).toBe(T0 + 30 * MINUTE)
+    expect(measuredFrom([record(0, true)])).toBeNull()
   })
 })

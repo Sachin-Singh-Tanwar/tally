@@ -3,15 +3,25 @@ import type { RunRecord } from './status'
 const RAW_BASE =
   'https://raw.githubusercontent.com/Sachin-Singh-Tanwar/tally/data/runs/'
 
-// The data branch starts at 2026-11 (first recorded run 25 Nov 2026). Earlier month
-// files cannot exist, so do not request them: a handled 404 still paints the console red.
+// The data branch starts at 2026-11. index.json is authoritative for which month
+// files exist; the floor only guards against an older manifest.
 const FIRST_MONTH = '2026-11'
-const WINDOW_MONTHS = 3
 
-const pad = (value: number) => String(value).padStart(2, '0')
-
-const monthKey = (month: Date) =>
-  `${month.getUTCFullYear()}-${pad(month.getUTCMonth() + 1)}`
+async function fetchMonths(): Promise<string[]> {
+  try {
+    const response = await fetch(`${RAW_BASE}index.json?v=${Date.now()}`, {
+      cache: 'no-store',
+    })
+    if (!response.ok) return []
+    const payload: unknown = await response.json()
+    if (!payload || typeof payload !== 'object') return []
+    const months = (payload as { months?: unknown }).months
+    if (!Array.isArray(months)) return []
+    return months.filter((key): key is string => typeof key === 'string' && key >= FIRST_MONTH)
+  } catch {
+    return []
+  }
+}
 
 async function fetchMonth(key: string): Promise<RunRecord[]> {
   try {
@@ -26,10 +36,8 @@ async function fetchMonth(key: string): Promise<RunRecord[]> {
   }
 }
 
-export async function loadRuns(now: Date = new Date()): Promise<RunRecord[]> {
-  const keys = Array.from({ length: WINDOW_MONTHS }, (_, offset) =>
-    monthKey(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1))),
-  ).filter((key) => key >= FIRST_MONTH)
+export async function loadRuns(): Promise<RunRecord[]> {
+  const keys = await fetchMonths()
   const batches = await Promise.all(keys.map(fetchMonth))
   return batches
     .flat()

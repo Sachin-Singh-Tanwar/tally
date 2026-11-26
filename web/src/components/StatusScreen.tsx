@@ -6,6 +6,7 @@ import {
   buildIncidents,
   lastOkAt,
   lastRuns,
+  measuredFrom,
   overallState,
   TARGETS,
   targetState,
@@ -31,6 +32,9 @@ export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) 
   const first = runs[0] ?? null
   const incidents = buildIncidents(runs, now)
   const openIncidents = incidents.filter((incident) => !incident.resolved)
+  const baseline = measuredFrom(runs)
+  const measuredRuns =
+    baseline === null ? [] : runs.filter((record) => Date.parse(record.ts) >= baseline)
 
   const titleClass =
     overall === 'DOWN'
@@ -72,7 +76,7 @@ export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) 
           </div>
           <div className="meta-item">
             <span className="meta-label">Expected interval</span>
-            <span className="meta-value">30 min · GitHub Actions cron</span>
+            <span className="meta-value">30 min · external trigger</span>
           </div>
         </div>
       </section>
@@ -86,7 +90,8 @@ export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) 
             </h2>
           </div>
           <p className="section-note">
-            ok records divided by all records inside each window, counted from the data branch.
+            ok records divided by all records inside each window since measured_since, counted
+            from the data branch.
           </p>
         </div>
         <div className="panel uptime-scroll">
@@ -107,7 +112,7 @@ export function StatusScreen({ runs, now }: { runs: RunRecord[]; now: number }) 
                   <td>{target}</td>
                   {WINDOWS.map((window) => (
                     <td key={window.label} className="mono">
-                      {formatUptime(uptimePercent(runs, target, window.ms, now))}
+                      {formatUptime(uptimePercent(measuredRuns, target, window.ms, now))}
                     </td>
                   ))}
                 </tr>

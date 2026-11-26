@@ -39,10 +39,11 @@ export function MethodScreen() {
       <section className="method-section">
         <h3>How often</h3>
         <p>
-          GitHub Actions runs a scheduled audit at the cron times in the workflow; the expected
-          interval used by the status math is 30 minutes. Each audit appends one record per target
-          to a JSON file in the <code>data</code> branch. The frontend reads those files from
-          raw.githubusercontent.com and computes every value in the browser.
+          An external scheduler dispatches a scheduled audit every 30 minutes into GitHub
+          Actions; the expected interval used by the status math is 30 minutes. Each audit
+          appends one record per target to a JSON file in the <code>data</code> branch. The
+          frontend reads the <code>index.json</code> manifest and only the listed month files
+          from raw.githubusercontent.com and computes every value in the browser.
         </p>
       </section>
 
@@ -63,20 +64,20 @@ export function MethodScreen() {
           <div>
             <strong>OPERATIONAL</strong>
             <span>
-              <code>age &lt;= 1.5 * interval</code> → 45 minutes or less
+              <code>age &lt;= 2 * interval</code> → 60 minutes or less
             </span>
           </div>
           <div>
             <strong>DEGRADED</strong>
             <span>
-              <code>1.5 * interval &lt; age &lt;= 3 * interval</code> → more than 45 minutes,
-              up to 90 minutes
+              <code>2 * interval &lt; age &lt;= 4 * interval</code> → more than 60 minutes,
+              up to 120 minutes
             </span>
           </div>
           <div>
             <strong>DOWN</strong>
             <span>
-              <code>age &gt; 3 * interval</code> → more than 90 minutes
+              <code>age &gt; 4 * interval</code> → more than 120 minutes
             </span>
           </div>
           <div>
@@ -98,22 +99,24 @@ export function MethodScreen() {
           after the streak minus that start; if there is no recovery yet, the incident is
           ongoing. MTTR is the duration of a resolved incident. Uptime is{' '}
           <code>ok_count / total_count</code> for a window of 24h, 7d, or 30d, excluding staged
-          demo records. All three come from real records.
+          demo records. All three come from real records. Before <code>measured_since</code> the
+          audit ran on GitHub's built-in cron, which dropped runs, and those cycles are excluded
+          from this window.
         </p>
       </section>
 
       <section className="method-section">
         <h3>Staged demo failures</h3>
         <p>
-          Sending <code>workflow_dispatch</code> with <code>simulate_failure=true</code> makes
-          the next four runs record a deliberate failure for one target. Runs with{' '}
-          <code>staged=true</code> always carry a STAGED DEMO badge on every screen. A staged
-          run is never presented as a real outage.
+          Sending <code>workflow_dispatch</code> with <code>trigger=manual</code> and{' '}
+          <code>simulate_failure=true</code> makes the next four runs record a deliberate failure
+          for one target. Runs with <code>staged=true</code> always carry a STAGED DEMO badge on
+          every screen. A staged run is never presented as a real outage.
         </p>
       </section>
 
       <p className="disclosure">
-        Tally runs on GitHub Actions. GitHub can delay scheduled runs; a late run is shown as
+        An external scheduler dispatches the audit into GitHub Actions. A late run is shown as
         late, not as a success.
       </p>
     </>

@@ -1,12 +1,18 @@
 name: Tally checks
 
 on:
-  schedule:
-    - cron: "5,35 * * * *"
   workflow_dispatch:
     inputs:
+      trigger:
+        description: "schedule = external pinger, manual = human run"
+        type: choice
+        options:
+          - schedule
+          - manual
+        required: false
+        default: schedule
       simulate_failure:
-        description: "Stage a demo failure for the next 4 runs"
+        description: "Stage a demo failure for the next 4 runs (manual only)"
         type: boolean
         required: false
         default: false
@@ -45,11 +51,13 @@ jobs:
         working-directory: app
         env:
           EVENT_NAME: ${{ github.event_name }}
+          TRIGGER: ${{ inputs.trigger }}
           SIMULATE_FAILURE: ${{ inputs.simulate_failure }}
         run: |
-          FLAGS="--data-dir ../data --event workflow_dispatch --simulate ${SIMULATE_FAILURE:-false}"
-          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
-            FLAGS="--data-dir ../data"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$TRIGGER" = "schedule" ]; then
+            FLAGS="--data-dir ../data --event schedule"
+          else
+            FLAGS="--data-dir ../data --event workflow_dispatch --simulate ${SIMULATE_FAILURE:-false}"
           fi
           python worker/run_checks.py $FLAGS
 

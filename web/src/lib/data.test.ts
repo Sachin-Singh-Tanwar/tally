@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { loadRuns } from './data'
+import type { RunRecord } from './status'
 
-const record = {
+const record: RunRecord = {
   ts: '2026-11-25T16:57:06Z',
   target: 'portfolio',
   ok: true,
@@ -9,44 +10,51 @@ const record = {
   status_code: 200,
   error: null,
   staged: false,
+  event: 'schedule',
 }
+
+function stubFetch(months: string[], records: Record<string, RunRecord[]> = {}): string[] {
+  const requested: string[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string) => {
+      requested.push(input)
+      if (input.includes('/index.json')) return { ok: true, json: async () => ({ months }) }
+      const key = input.match(/\/runs\/(\d{4}-\d{2})\.json/)?.[1] ?? ''
+      return { ok: true, json: async () => records[key] ?? [] }
+    }),
+  )
+  return requested
+}
+
+const keys = (urls: string[]) =>
+  urls.map((url) => url.match(/\/runs\/(index|\d{4}-\d{2})\.json/)?.[1] ?? '?')
 
 describe('loadRuns', () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  it('does not request months before the data branch starts', async () => {
-    const requested: string[] = []
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string) => {
-        requested.push(input)
-        return { ok: true, json: async () => [record] }
-      }),
-    )
+  it('reads the manifest first, then only the months it lists', async () => {
+    const requested = stubFetch(['2026-11'], { '2026-11': [record] })
 
-    const runs = await loadRuns(new Date('2026-11-26T10:00:00Z'))
+    const runs = await loadRuns()
 
-    expect(requested).toHaveLength(1)
-    expect(requested[0]).toContain('/runs/2026-11.json')
-    expect(runs).toHaveLength(1)
+    expect(keys(requested)).toEqual(['index', '2026-11'])
+    expect(runs).toEqual([record])
   })
 
-  it('keeps the three-month window once later months exist', async () => {
-    const requested: string[] = []
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string) => {
-        requested.push(input)
-        return { ok: false, json: async () => [] }
-      }),
-    )
+  it('never derives months from the clock and honours the floor', async () => {
+    const requested = stubFetch(['2026-09', '2026-11'])
 
-    await loadRuns(new Date('2027-01-02T10:00:00Z'))
+    await loadRuns()
 
-    expect(requested.map((url) => url.match(/\/runs\/(\d{4}-\d{2})\.json/)?.[1])).toEqual([
-      '2027-01',
-      '2026-12',
-      '2026-11',
-    ])
+    expect(keys(requested)).toEqual(['index', '2026-11'])
+  })
+
+  it('requests a new month only once the worker has listed it', async () => {
+    const requested = stubFetch(['2026-11', '2026-12'])
+
+    await loadRuns()
+
+    expect(keys(requested)).toEqual(['index', '2026-11', '2026-12'])
   })
 })

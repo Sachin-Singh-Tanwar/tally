@@ -15,6 +15,7 @@ export interface RunRecord {
   status_code: number | null
   error: string | null
   staged: boolean
+  event?: string
 }
 
 export type State = 'OPERATIONAL' | 'DEGRADED' | 'DOWN' | 'NEVER_RAN'
@@ -34,6 +35,17 @@ export interface Incident {
 
 function recordedAt(record: RunRecord): number {
   return Date.parse(record.ts)
+}
+
+export function measuredFrom(runs: RunRecord[]): number | null {
+  let earliest: number | null = null
+  for (const record of runs) {
+    if (record.event !== 'schedule') continue
+    const at = recordedAt(record)
+    if (Number.isNaN(at)) continue
+    if (earliest === null || at < earliest) earliest = at
+  }
+  return earliest
 }
 
 export function lastOkAt(runs: RunRecord[], target: string): number | null {
