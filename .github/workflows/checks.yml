@@ -2,7 +2,6 @@ name: Tally checks
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
     - cron: "5,35 * * * *"
   workflow_dispatch:
     inputs:
