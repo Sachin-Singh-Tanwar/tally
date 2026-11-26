@@ -39,7 +39,8 @@ export function MethodScreen() {
       <section className="method-section">
         <h3>How often</h3>
         <p>
-          A GitHub Actions cron runs every 30 minutes. Each run appends one record per target
+          GitHub Actions runs a scheduled audit at the cron times in the workflow; the expected
+          interval used by the status math is 30 minutes. Each audit appends one record per target
           to a JSON file in the <code>data</code> branch. The frontend reads those files from
           raw.githubusercontent.com and computes every value in the browser.
         </p>
@@ -96,8 +97,8 @@ export function MethodScreen() {
           Its start is the first failure in the streak. Duration is the first successful record
           after the streak minus that start; if there is no recovery yet, the incident is
           ongoing. MTTR is the duration of a resolved incident. Uptime is{' '}
-          <code>ok_count / total_count</code> for a window of 24h, 7d, or 30d. All three come
-          from records.
+          <code>ok_count / total_count</code> for a window of 24h, 7d, or 30d, excluding staged
+          demo records. All three come from real records.
         </p>
       </section>
 

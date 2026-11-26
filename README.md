@@ -8,7 +8,8 @@ Tally answers one question: did the scheduled job actually run? It records real 
 
 ## Architecture
 
-- **Scheduler** — GitHub Actions cron, every 30 minutes, in `.github/workflows/checks.yml`.
+- **Scheduler** — GitHub Actions scheduled audit; the exact cron entries are in
+  `.github/workflows/checks.yml`. The expected interval used by the status math is 30 minutes.
 - **Worker** — `worker/run_checks.py`. Standard library plus `requests`. It probes three
   public endpoints and appends one record per target to `runs/YYYY-MM.json` on the `data`
   branch. History is appended, never rewritten.

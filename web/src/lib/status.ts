@@ -75,6 +75,7 @@ export function uptimePercent(
   let total = 0
   let successes = 0
   for (const record of runs) {
+    if (record.staged) continue
     if (target !== null && record.target !== target) continue
     const at = recordedAt(record)
     if (Number.isNaN(at) || at < from || at > now) continue
