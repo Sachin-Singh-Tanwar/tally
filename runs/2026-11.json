@@ -2464,5 +2464,35 @@
     "error": null,
     "staged": false,
     "event": "schedule"
+  },
+  {
+    "ts": "2026-11-27T22:35:34Z",
+    "target": "portfolio",
+    "ok": true,
+    "latency_ms": 150,
+    "status_code": 200,
+    "error": null,
+    "staged": false,
+    "event": "schedule"
+  },
+  {
+    "ts": "2026-11-27T22:35:34Z",
+    "target": "gh_api",
+    "ok": true,
+    "latency_ms": 18,
+    "status_code": 200,
+    "error": null,
+    "staged": false,
+    "event": "schedule"
+  },
+  {
+    "ts": "2026-11-27T22:35:34Z",
+    "target": "apify_api",
+    "ok": true,
+    "latency_ms": 53,
+    "status_code": 200,
+    "error": null,
+    "staged": false,
+    "event": "schedule"
   }
 ]
